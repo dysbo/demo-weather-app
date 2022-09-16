@@ -5,24 +5,36 @@ import Weather from './Weather';
 export type WeatherApiReponse = {
   main: any
   name: string
+  sys: {
+    sunrise: number
+    sunset: number
+  }
+  weather: [{
+    description: string
+  }]
+  humidity: number
 }
+
+const buildUrl = (lat: number, lon: number, units: 'metric' | 'imperial' = 'imperial') =>
+  `${process.env.REACT_APP_API_URL}/weather/?lat=${lat}&lon=${lon}&units=${units}&APPID=${process.env.REACT_APP_API_KEY}`
 
 function App() {
   const [lat, setLat] = useState<number>()
   const [lon, setLon] = useState<number>()
   const [data, setData] = useState<WeatherApiReponse>()
+  const [error, setError] = useState<string>()
 
   const fetchData = async (lat: number, lon: number) => {
-    const fetchResult = await fetch(`${process.env.REACT_APP_API_URL}/weather/?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.REACT_APP_API_KEY}`)
-    const jsonResult = await fetchResult.json()
-    console.log(jsonResult)
-    setData(jsonResult)
+    const fetchResult = await fetch(buildUrl(lat, lon))
+    return await fetchResult.json()
   }
 
   // effect to get latitude and longitude
   useEffect(() => {
     // if latitude and longitude have been set already, we don't need to do this
     if (lat && lon) return
+
+    setError(undefined)
 
     navigator.geolocation.getCurrentPosition(position => {
       setLat(position.coords.latitude)
@@ -38,13 +50,14 @@ function App() {
     if (!lat || !lon || data) return
 
     fetchData(lat, lon)
-  }, [lat, lon, data])
+      .then(data => setData(data))
+      .catch(error => setError(error.message))
+  }, [lat, lon, data, error])
 
   return (
     <div className="App">
-      {data?.main && (
-        <Weather data={data} />
-      )}
+      {error && `An Error Occurred: ${error}`}
+      {data?.main && <Weather data={data} />}
     </div>
   );
 }
