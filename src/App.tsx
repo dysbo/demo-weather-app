@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+import Weather from './Weather';
+
+export type WeatherApiReponse = {
+  main: any
+  name: string
+}
 
 function App() {
   const [lat, setLat] = useState<number>()
   const [lon, setLon] = useState<number>()
-  const [data, setData] = useState<object>()
+  const [data, setData] = useState<WeatherApiReponse>()
 
   const fetchData = async (lat: number, lon: number) => {
     const fetchResult = await fetch(`${process.env.REACT_APP_API_URL}/weather/?lat=${lat}&lon=${lon}&units=metric&APPID=${process.env.REACT_APP_API_KEY}`)
@@ -22,9 +28,6 @@ function App() {
       setLat(position.coords.latitude)
       setLon(position.coords.longitude)
     })
-
-    console.log(`Latitude is: ${lat}`)
-    console.log(`Longitude is: ${lon}`)
   }, [lat, lon])
 
   useEffect(() => {
@@ -33,12 +36,15 @@ function App() {
     //  2. longitude is null - pointless fetch
     //  3. data is already populated - this will prevent needless requests from going out
     if (!lat || !lon || data) return
+
     fetchData(lat, lon)
-  }, [lat, lon])
+  }, [lat, lon, data])
 
   return (
     <div className="App">
-
+      {data?.main && (
+        <Weather data={data} />
+      )}
     </div>
   );
 }
