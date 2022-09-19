@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import './App.css';
 import Weather from './Weather';
+import { Dimmer, Loader } from 'semantic-ui-react'
 
 export type WeatherApiReponse = {
   main: any
@@ -11,6 +11,7 @@ export type WeatherApiReponse = {
   }
   weather: [{
     description: string
+    main: any
   }]
   humidity: number
 }
@@ -54,10 +55,18 @@ function App() {
       .catch(error => setError(error.message))
   }, [lat, lon, data, error])
 
+  const refresh = () => window.location.reload()
+
   return (
     <div className="App">
       {error && `An Error Occurred: ${error}`}
-      {data?.main && <Weather data={data} />}
+      {!error && data?.main ? <Weather data={data} refresh={refresh} /> : (
+        <div>
+          <Dimmer active>
+            <Loader>Loading ..</Loader>
+          </Dimmer>
+        </div>
+      )}
     </div>
   );
 }
